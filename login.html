@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        /* ตั้งค่าเบื้องต้น */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* จัดการพื้นหลัง */
+        body {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #fff;
+        }
+
+        /* สไตล์ของคอนเทนเนอร์ */
+        .container {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* สไตล์ของหัวเรื่อง */
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        /* การจัดการอินพุตและปุ่ม */
+        .input-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #6a11cb;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2575fc;
+        }
+
+        /* ข้อความและลิงก์ */
+        p {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        a {
+            color: #6a11cb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="button" onclick="login()">Login</button>
+            <p>Don't have an account? <a href="register.html">Register here</a></p>
+        </form>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Login successful!');
+                    localStorage.setItem('token', result.token); // เก็บ token ใน local storage
+                    window.location.href = 'index.html';
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error logging in:', error);
+            }
+        }
+    </script>
+</body>
+</html>

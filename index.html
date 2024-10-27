@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Check-In</title>
+    <style>
+        /* ตั้งค่าสีพื้นหลัง */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* คอนเทนเนอร์หลัก */
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+        }
+
+        /* ปุ่ม Logout */
+        .logout-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border: none;
+            background-color: #6a11cb;
+            color: #ffffff;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2575fc;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #6a11cb;
+            color: white;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .status-checked {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .edit-btn {
+            background-color: #f39c12;
+        }
+
+        .edit-btn:hover {
+            background-color: #e67e22;
+        }
+
+        .status-checked {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        /* ฟอร์มแก้ไข */
+        .edit-form {
+            display: none;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .edit-form label, .edit-form input {
+            display: block;
+            margin: 10px 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ปุ่ม Logout -->
+        <button class="logout-btn" onclick="logout()">Logout</button>
+
+        <h1>Student Check-In List</h1>
+
+        <button class="add-student-btn" onclick="location.href='add_student.html'">Add New Student</button>
+        <button onclick="showCheckedInStudents()">Show Checked-In Students</button> <!-- ปุ่มแสดงนักเรียนที่เช็คชื่อแล้ว -->
+
+        <h2>Student List</h2>
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Check In</th>
+                    <th>Action</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here -->
+            </tbody>
+        </table>
+
+          <!-- ฟอร์มแก้ไขข้อมูลนักเรียน -->
+          <div class="edit-form" id="editForm">
+            <h3>Edit Student</h3>
+            <label>Student ID: <input type="text" id="editStudentId" readonly></label>
+            <label>First Name: <input type="text" id="editFirstName"></label>
+            <label>Last Name: <input type="text" id="editLastName"></label>
+            <label>Telephone: <input type="text" id="editPhone"></label>
+            <label>Email: <input type="email" id="editEmail"></label>
+            <button onclick="updateStudent()">Save Changes</button>
+            <button onclick="closeEditForm()">Cancel</button>
+        </div>
+             </div>
+    </div>
+
+    <script>
+        let allStudents = []; // ตัวแปรเก็บข้อมูลนักเรียนทั้งหมด
+
+        async function fetchStudents() {
+    try {
+        const response = await fetch('http://localhost:5000/students', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        allStudents = await response.json();
+
+        // ตั้งค่า checkedIn ให้กับนักเรียนแต่ละคน
+        allStudents = allStudents.map(student => ({
+            ...student,
+            checkedIn: student.checkedIn || false // ตรวจสอบและตั้งค่า checkedIn ให้เป็น false ถ้าไม่มีข้อมูล
+        }));
+
+        displayStudents(allStudents);
+    } catch (error) {
+        console.error('Error fetching students:', error);
+    }
+}
+
+async function showCheckedInStudents() {
+    const checkedInStudents = allStudents.filter(student => student.checkedIn === true);
+    displayStudents(checkedInStudents);
+}
+
+
+        function displayStudents(students) {
+    const tableBody = document.querySelector('#studentTable tbody');
+    tableBody.innerHTML = '';
+
+    students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${student.Studentid}</td>
+            <td>${student.first_name}</td>
+            <td>${student.last_name}</td>
+            <td>
+                <button onclick="checkIn('${student.Studentid}')">Check In</button>
+                <span id="status-${student.Studentid}" class="status-checked" style="display: ${student.checkedIn ? 'inline' : 'none'};">Checked In</span>
+            </td>
+            <td><button class="delete-btn" onclick="deleteStudent('${student.Studentid}')">Delete</button></td>
+             <td><button class="edit-btn" onclick="openEditForm('${student.Studentid}')">Edit</button></td>
+                
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function openEditForm(studentId) {
+            const student = allStudents.find(s => s.Studentid === studentId);
+            if (student) {
+                document.getElementById('editStudentId').value = student.Studentid;
+                document.getElementById('editFirstName').value = student.first_name;
+                document.getElementById('editLastName').value = student.last_name;
+                document.getElementById('editPhone').value = student.telephone;
+                document.getElementById('editEmail').value = student["e-mail"];
+                document.getElementById('editForm').style.display = 'block';
+            }
+        }
+
+        function closeEditForm() {
+            document.getElementById('editForm').style.display = 'none';
+        }
+
+        async function updateStudent() {
+            const studentId = document.getElementById('editStudentId').value;
+            const firstName = document.getElementById('editFirstName').value;
+            const lastName = document.getElementById('editLastName').value;
+            const phone = document.getElementById('editPhone').value;
+            const email = document.getElementById('editEmail').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/edit-student', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ studentId, firstName, lastName, phone, email })
+                });
+                const result = await response.json();
+                alert(result.message);
+                fetchStudents();
+                closeEditForm();
+            } catch (error) {
+                console.error('Error updating student:', error);
+            }
+        }
+
+        async function showCheckedInStudents() {
+            const checkedInStudents = allStudents.filter(student => student.checkedIn);
+            displayStudents(checkedInStudents);
+        }
+
+        async function checkIn(studentId) {
+            try {
+                const response = await fetch('http://localhost:5000/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ studentId, attendanceStatus: true })
+                });
+                const result = await response.json();
+                alert(result.message);
+
+                // อัปเดตสถานะ checkedIn ของนักเรียนที่เช็คชื่อ
+                allStudents = allStudents.map(student => 
+                    student.Studentid === studentId ? { ...student, checkedIn: true } : student
+                );
+
+                document.getElementById(`status-${studentId}`).style.display = 'inline';
+            } catch (error) {
+                console.error('Error checking in student:', error);
+            }
+        }
+
+        async function deleteStudent(studentId) {
+            if (confirm("Are you sure you want to delete this student?")) {
+                try {
+                    const response = await fetch('http://localhost:5000/delete-student', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({ studentId })
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                    fetchStudents();
+                } catch (error) {
+                    console.error('Error deleting student:', error);
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token'); // ลบ token ออกจาก localStorage
+            alert('You have been logged out.');
+            window.location.href = 'login.html'; // กลับไปที่หน้า Login
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchStudents);
+    </script>
+</body>
+</html>
